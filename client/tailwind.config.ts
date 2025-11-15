@@ -23,6 +23,10 @@ const config = {
         heading: ["Orbitron", "sans-serif"],
         body: ["Oxanium", "sans-serif"],
       },
+      screens: {
+        lg900: "900px",
+         sm500: "500px",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

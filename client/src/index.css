@@ -11,17 +11,7 @@
     --font-heading: 'Orbitron', sans-serif;
     --font-body: 'Oxanium', sans-serif;
 
-    /* Brand and UI Colors */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
-    --primary: 33 91% 44%; /* #d4790b */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 5% 10%;
-    --border: 240 5.9% 90%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --radius: 0.75rem;
+  
   }
 
   /* Body Styling */
@@ -39,13 +29,6 @@
     color: hsl(var(--foreground));
   }
 
-  button {
-    @apply px-4 py-2 rounded-lg font-semibold transition-all;
-    background-color: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-  }
 
-  button:hover {
-    background-color: hsl(33 91% 38%); 
-  }
+ 
 }
