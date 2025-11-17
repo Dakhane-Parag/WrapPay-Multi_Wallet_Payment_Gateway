@@ -7,10 +7,10 @@ import coinbaseLogo from "@/assets/Logos/coinbase.png";
 import backpackLogo from "@/assets/Logos/backpack.png";
 
 const imageLogos = [
-  { src: metamaskLogo, alt: "MetaMask", href: "https://company1.com" },
-  { src: phantomLogo, alt: "Phantom", href: "https://company2.com" },
-  { src: coinbaseLogo, alt: "Coinbase", href: "https://company3.com" },
-  { src: backpackLogo, alt: "Backpack", href: "https://company2.com" },
+  { src: metamaskLogo, alt: "MetaMask", href: "https://metamask.io" },
+  { src: phantomLogo, alt: "Phantom", href: "https://phantom.com" },
+  { src: coinbaseLogo, alt: "Coinbase", href: "https://coinbase.com" },
+  { src: backpackLogo, alt: "Backpack", href: "https://backpack.app" },
 ];
 
 const Home = () => {
