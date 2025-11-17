@@ -26,6 +26,7 @@ const Navbar = () => {
         width: shrink ? "60%" : "90%",
         paddingTop: "14px",
         paddingBottom: "14px",
+        gap:"3px",
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className=" fixed left-1/2 -translate-x-1/2 top-6 z-50
