@@ -1,10 +1,11 @@
-import FloatingLines from "@/components/ui/AnimatedBG";
+import FloatingLines from "@/components/AnimatedBG";
 import { Zap } from "lucide-react";
 import LogoLoop from "@/components/LogoLoop";
 import metamaskLogo from "@/assets/Logos/metamask.png";
 import phantomLogo from "@/assets/Logos/phantom.png";
 import coinbaseLogo from "@/assets/Logos/coinbase.png";
 import backpackLogo from "@/assets/Logos/backpack.png";
+import ideaImg from "@/assets/ideaImg.png";
 
 const imageLogos = [
   { src: metamaskLogo, alt: "MetaMask", href: "https://metamask.io" },
@@ -18,7 +19,6 @@ const Home = () => {
     <>
       {/* HERO SECTION */}
       <div className="relative bg-black min-h-screen w-full overflow-hidden">
-        {/* Animated Background */}
         <div className="absolute inset-0 w-full h-full pointer-events-auto">
           <FloatingLines
             enabledWaves={["top", "middle", "bottom"]}
@@ -78,39 +78,47 @@ const Home = () => {
         </div>
       </div>
 
-      <section className="relative z-10 text-black px-6 py-24 md:py-32 bg-white backdrop-blur-xl">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center">
-          Why Choose Our Payment SDK?
-        </h2>
+      {/* idea section */}
+      <section className="w-full bg-white text-black py-24 px-6 flex justify-center">
+        
+          <div
+            className="
+            relative max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 p-12
+            rounded-3xl overflow-hidden
+            shadow-2xl
+            border border-gray-300
+            bg-white"
+          >
+            <div className="relative z-10 flex justify-center md:justify-end order-1 md:order-2">
+              <div className="w-full max-w-md rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.12)] bg-white">
+                <img
+                  src={ideaImg}
+                  alt="Developer illustration"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
 
-        <p className="max-w-3xl mx-auto text-center text-lg opacity-80 mb-16">
-          Built for scalability and simplicity, our SDK ensures seamless payments across chains and
-          wallets with minimal integration time.
-        </p>
+            <div className="relative z-10 space-y-6 order-2 md:order-1">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-black">
+                One Integration,
+                <br /> Infinite Wallet Support
+              </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
-          <div className="p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
-            <h3 className="text-xl font-semibold mb-3">Multi-Wallet Support</h3>
-            <p className="opacity-75">
-              Accept payments from any wallet including MetaMask, Phantom, Trust Wallet, and more.
-            </p>
+              <h3 className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+                Connect once — support every major crypto wallet instantly.
+              </h3>
+
+              <p className="text-gray-600 leading-relaxed">
+                No need to manage dozens of APIs or handle compatibility issues. Our unified SDK
+                automatically adapts to new wallets and chains.
+              </p>
+
+              <p className="text-gray-600 leading-relaxed">
+                Stay focused on your product while your infrastructure stays future-proof.
+              </p>
+            </div>
           </div>
-
-          <div className="p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
-            <h3 className="text-xl font-semibold mb-3">Cross-Chain Ready</h3>
-            <p className="opacity-75">
-              Works across Ethereum, Solana, Polygon, BNB Chain, and upcoming L2 ecosystems.
-            </p>
-          </div>
-
-          <div className="p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
-            <h3 className="text-xl font-semibold mb-3">Developer Friendly</h3>
-            <p className="opacity-75">
-              Simple APIs, clean documentation, and fast onboarding for both startups and
-              enterprises.
-            </p>
-          </div>
-        </div>
       </section>
     </>
   );
