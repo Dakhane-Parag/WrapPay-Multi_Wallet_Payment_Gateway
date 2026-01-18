@@ -6,6 +6,7 @@ import phantomLogo from "@/assets/Logos/phantom.png";
 import coinbaseLogo from "@/assets/Logos/coinbase.png";
 import backpackLogo from "@/assets/Logos/backpack.png";
 import ideaImg from "@/assets/ideaImg.png";
+import Footer from "@/components/Footer";
 
 const imageLogos = [
   { src: metamaskLogo, alt: "MetaMask", href: "https://metamask.io" },
@@ -120,6 +121,7 @@ const Home = () => {
             </div>
           </div>
       </section>
+      <Footer></Footer>
     </>
   );
 };
