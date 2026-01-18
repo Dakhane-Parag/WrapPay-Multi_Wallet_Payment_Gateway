@@ -7,6 +7,7 @@ import coinbaseLogo from "@/assets/Logos/coinbase.png";
 import backpackLogo from "@/assets/Logos/backpack.png";
 import ideaImg from "@/assets/ideaImg.png";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar"
 
 const imageLogos = [
   { src: metamaskLogo, alt: "MetaMask", href: "https://metamask.io" },
@@ -18,6 +19,7 @@ const imageLogos = [
 const Home = () => {
   return (
     <>
+    <Navbar></Navbar>
       {/* HERO SECTION */}
       <div className="relative bg-black min-h-screen w-full overflow-hidden">
         <div className="absolute inset-0 w-full h-full pointer-events-auto">
