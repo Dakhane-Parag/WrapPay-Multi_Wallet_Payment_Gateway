@@ -1,6 +1,6 @@
 // src/components/Footer.tsx
 
-import { FC } from "react";
+import type { FC } from "react";
 import { Github, Twitter, Mail } from "lucide-react";
 import LogoLoop from "@/components/LogoLoop";
 
