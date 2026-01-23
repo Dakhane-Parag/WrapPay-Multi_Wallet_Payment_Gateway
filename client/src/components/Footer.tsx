@@ -45,7 +45,7 @@ const Footer: FC = () => {
 
         {/* Brand */}
         <div className="col-span-1 lg:col-span-2">
-          <h2 className="text-2xl font-bold mb-3">CryptoPay SDK</h2>
+          <h2 className="text-2xl font-bold mb-3">Wrap Payments</h2>
           <p className="text-gray-400 leading-relaxed">
             One unified payment system for every blockchain wallet.
             Fast. Secure. Developer-friendly.
