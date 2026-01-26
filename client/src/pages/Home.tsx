@@ -1,5 +1,5 @@
 import FloatingLines from "@/components/AnimatedBG";
-import { Zap } from "lucide-react";
+import { Zap , Check, X} from "lucide-react";
 import LogoLoop from "@/components/LogoLoop";
 import metamaskLogo from "@/assets/Logos/metamask.png";
 import phantomLogo from "@/assets/Logos/phantom.png";
@@ -8,6 +8,7 @@ import backpackLogo from "@/assets/Logos/backpack.png";
 import ideaImg from "@/assets/ideaImg.png";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import LaunchCTA from "@/components/LaunchCTA";
 
 const imageLogos = [
   { src: metamaskLogo, alt: "MetaMask", href: "https://metamask.io" },
@@ -15,6 +16,27 @@ const imageLogos = [
   { src: coinbaseLogo, alt: "Coinbase", href: "https://coinbase.com" },
   { src: backpackLogo, alt: "Backpack", href: "https://backpack.app" },
 ];
+
+const otherPlatforms = [
+  "Constant back-and-forth between billing, tax, and compliance tools",
+  "Expensive developer hours spent on integrations",
+  "Customer and revenue data scattered across dashboards",
+  "Hidden fees for every extra feature or user",
+  "Multiple logins, subscriptions, and failed syncs",
+  "Limited visibility into your global business",
+  "No developer-centric infrastructure",
+];
+
+const wrapPayments = [
+  "One platform for payments, billing, and distribution",
+  "Built-in Merchant of Record coverage worldwide",
+  "Seamless developer-first APIs and SDKs",
+  "Centralized analytics for revenue and customer insights",
+  "Transparent, simple pricing",
+  "One login, one integration, full control",
+  "Friendlier on the pocket as a complete stack",
+];
+
 
 const Home = () => {
   return (
@@ -47,7 +69,7 @@ const Home = () => {
   shadow-[0_0_15px_rgba(88,196,186,0.35)]
 ">
   <Zap className="w-4 h-4 text-[rgb(170,235,230)]" />
-  <span className="text-sm font-medium">
+  <span className="text-sm font-medium ">
     Lightning Fast Integration
   </span>
 </span>
@@ -102,7 +124,7 @@ const Home = () => {
       </div>
 
       {/* idea section */}
-      <section className="w-full bg-white text-black py-24 px-6 flex justify-center">
+      <section className="w-full bg-white text-black py-24 px-4 flex justify-center">
         <div
           className="
             relative max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 p-12
@@ -142,6 +164,73 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+       <section className="relative py-24 bg-white text-gray-900">
+      <div className="max-w-6xl mx-auto px-6">
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <p className="text-sm font-semibold tracking-widest text-blue-600 mb-4">
+            BUILT DIFFERENT
+          </p>
+          <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+            Stop piecing tools together. <br />
+            Start growing with one platform.
+          </h2>
+          <p className="text-gray-600 text-lg">
+            Managing payments, billing, and distribution shouldn’t mean juggling
+            6–10 different tools. With <span className="font-semibold">WrapPayments</span>,
+            everything you need to monetize lives in one place.
+          </p>
+        </div>
+
+        {/* Comparison Grid */}
+        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-16">
+          {/* Divider */}
+          <div className="hidden md:block absolute inset-y-0 left-1/2 w-px bg-gray-200" />
+
+          {/* Other Platforms */}
+          <div>
+            <h3 className="text-xl font-semibold mb-8 flex items-center gap-3">
+              Other Platforms
+            </h3>
+
+            <ul className="space-y-6">
+              {otherPlatforms.map((item, index) => (
+                <li key={index} className="flex items-start gap-4">
+                  <span className="flex-shrink-0 mt-1">
+                    <X className="h-5 w-5 text-red-500" />
+                  </span>
+                  <span className="text-gray-600">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* WrapPayments */}
+          <div>
+            <h3 className="text-xl font-semibold mb-8 flex items-center gap-3">
+              <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-emerald-500 text-white text-sm">
+                ✓
+              </span>
+              WrapPayments
+            </h3>
+
+            <ul className="space-y-6">
+              {wrapPayments.map((item, index) => (
+                <li key={index} className="flex items-start gap-4">
+                  <span className="flex-shrink-0 mt-1">
+                    <Check className="h-5 w-5 text-emerald-500" />
+                  </span>
+                  <span className="text-gray-800">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <LaunchCTA/>
       <Footer></Footer>
     </>
   );

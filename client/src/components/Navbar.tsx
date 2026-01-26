@@ -25,7 +25,7 @@ const Navbar = () => {
             alt="Brand Logo"
             className="h-11 w-11 rounded-full"
           />
-          <span>WrapPay</span>
+          <span className="hidden sm500:inline">WrapPay</span>
         </Link>
 
         {/* Desktop Nav */}
