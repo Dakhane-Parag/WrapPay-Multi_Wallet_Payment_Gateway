@@ -9,6 +9,7 @@ import ideaImg from "@/assets/ideaImg.png";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import LaunchCTA from "@/components/LaunchCTA";
+import ManagedPayments from "@/components/ManagedPayments";
 
 const imageLogos = [
   { src: metamaskLogo, alt: "MetaMask", href: "https://metamask.io" },
@@ -165,6 +166,12 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Usecases section */}
+      <ManagedPayments/>
+      
+
+
+    {/* Built different section */}
        <section className="relative py-24 bg-white text-gray-900">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
