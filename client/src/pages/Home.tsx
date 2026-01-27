@@ -10,6 +10,9 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import LaunchCTA from "@/components/LaunchCTA";
 import ManagedPayments from "@/components/ManagedPayments";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const imageLogos = [
   { src: metamaskLogo, alt: "MetaMask", href: "https://metamask.io" },
@@ -40,6 +43,17 @@ const wrapPayments = [
 
 
 const Home = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const goToAuth = () => {
+    setLoading(true);
+
+    // small delay for smooth UX
+    setTimeout(() => {
+      navigate("/auth", { state: { fromCTA: true } });
+    }, 400);
+  };
   return (
     <>
       <Navbar></Navbar>
@@ -87,6 +101,7 @@ const Home = () => {
           </p>
 
           <div className="mt-3 flex flex-col sm:flex-row gap-4 pointer-events-auto">
+            <Link to="/signup">
             <button
               className="px-8 py-3
                  bg-[rgb(88,196,186)]
@@ -97,8 +112,12 @@ const Home = () => {
                 transition-all duration-300
                 hover:shadow-[0_0_25px_rgba(110,215,180)]"
             >
-              Get Started
+              {loading && (
+        <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+      )}
+      {loading ? "Loading…" : "Get started"}
             </button>
+            </Link>
 
             <button className="px-8 py-3 bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-xl">
               View Documentation

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Logo from "../assets/wrapLogo.png";
+import Logo from "../assets/wrap1.png";
+import { useNavigate } from "react-router-dom"
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -11,6 +12,17 @@ const Navbar = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const goToAuth = () => {
+    setLoading(true);
+
+    setTimeout(() => {
+      navigate("/auth", { state: { fromCTA: true } });
+    }, 400);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,35 +82,39 @@ const Navbar = () => {
             scrolled ? "text-[#003f3f]/80" : "text-white/80"
           }`}
         >
-          <Link to="/features" className="hover:text-[#003f3f] transition">
+          <Link to="/features" className="hover:text-[#028181] transition">
             Features
           </Link>
-          <Link to="/docs" className="hover:text-[#003f3f] transition">
+          <Link to="/docs" className="hover:text-[#028181] transition">
             Developers
           </Link>
-          <Link to="/resources" className="hover:text-[#003f3f] transition">
+          <Link to="/resources" className="hover:text-[#028181] transition">
             Resources
           </Link>
-          <Link to="/pricing" className="hover:text-[#003f3f] transition">
+          <Link to="/pricing" className="hover:text-[#028181] transition">
             Pricing
           </Link>
         </div>
 
         {/* Desktop Login */}
         <div className="hidden lg900:block">
-          <Link to="/signup">
+          <Link to="/login">
             <button
               className="
                 px-8 py-3
                 bg-[#003f3f]
-                hover:bg-[#005f5f]
+                hover:bg-[#038484]
                 text-[#e6fffb] font-semibold
                 rounded-xl
-                shadow-[0_0_20px_rgba(0,63,63,0.45)]
-                transition
+                shadow-[0_0_20px_rgba(88,196,186,0.4)]
+                transition-all duration-300
+                hover:shadow-[0_0_25px_rgba(110,214,180)]
               "
             >
-              Login
+              {loading && (
+        <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+      )}
+      {loading ? "Loading…" : "Login"}
             </button>
           </Link>
         </div>
@@ -139,7 +155,7 @@ const Navbar = () => {
               <Link onClick={toggleMenu} to="/pricing">Pricing</Link>
               <Link onClick={toggleMenu} to="/contact">Contact</Link>
 
-              <Link onClick={toggleMenu} to="/signup">
+              <Link onClick={toggleMenu} to="/login">
                 <button
                   className="
                     px-8 py-3
