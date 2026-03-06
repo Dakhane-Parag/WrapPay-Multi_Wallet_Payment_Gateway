@@ -3,6 +3,7 @@
     import Navbar from './components/Navbar';
     import AuthPage from './pages/AuthPage';
     import Login from './pages/Login';
+    import DocsPage from './pages/DocsPage';
 
     const App = () => {
       return (
@@ -11,7 +12,7 @@
             <Route path="/" element={<Home/>} />
             <Route path="/signup" element={<AuthPage/>}/>
             <Route path="/login" element={<Login/>}/>
-            
+            <Route path="/docs" element={<DocsPage/>}/>
 
 
           </Routes>

@@ -119,9 +119,11 @@ const Home = () => {
             </button>
             </Link>
 
-            <button className="px-8 py-3 bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-xl">
-              View Documentation
-            </button>
+            <Link to="/docs">
+              <button className="px-8 py-3 bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-xl">
+                View Documentation
+              </button>
+            </Link>
           </div>
         </div>
 
