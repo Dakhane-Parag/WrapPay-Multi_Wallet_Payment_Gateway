@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   loginWithEmail,
+  loginWithGoogle,
   setToken,
   setMerchantData,
   adminLogin,
@@ -10,6 +11,9 @@ import {
 } from "@/lib/api";
 import Logo from "@/assets/wrap1.png";
 import logImage from "@/assets/login.jpg";
+import GoogleButton from "@/lib/GoogleAuth";
+
+// import { GoogleLogin } from '@react-oauth/google';
 
 type LoginMode = "merchant" | "admin";
 
@@ -50,6 +54,25 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (response: any) => {
+    if (!response.credential) {
+      setError("Google login failed: No credential received.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await loginWithGoogle(response.credential);
+      setToken(res.token);
+      setMerchantData(res.merchant as unknown as Record<string, unknown>);
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Google login failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* LEFT: Login Form */}
@@ -78,8 +101,8 @@ export default function Login() {
               type="button"
               onClick={() => { setMode("merchant"); setError(""); }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "merchant"
-                  ? "bg-[rgb(88,196,186)] text-[#003f3f] shadow-md"
-                  : "text-white/50 hover:text-white"
+                ? "bg-[rgb(88,196,186)] text-[#003f3f] shadow-md"
+                : "text-white/50 hover:text-white"
                 }`}
             >
               Merchant
@@ -88,8 +111,8 @@ export default function Login() {
               type="button"
               onClick={() => { setMode("admin"); setError(""); }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "admin"
-                  ? "bg-[rgb(88,196,186)] text-[#003f3f] shadow-md"
-                  : "text-white/50 hover:text-white"
+                ? "bg-[rgb(88,196,186)] text-[#003f3f] shadow-md"
+                : "text-white/50 hover:text-white"
                 }`}
             >
               Admin
@@ -191,25 +214,15 @@ export default function Login() {
                 <div className="flex-grow h-px bg-white/10" />
               </div>
 
-              <button
-                className="
-                  w-full py-3 mb-3 rounded-xl
-                  border border-white/15
-                  text-white font-medium
-                  hover:bg-white/5
-                  transition
-                  flex items-center justify-center gap-3
-                "
-              >
-                <svg width="18" height="18" viewBox="0 0 48 48">
-                  <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.78 32.91 29.303 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.227 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917Z" />
-                  <path fill="#FF3D00" d="M6.306 14.691 12.876 19.51C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.227 4 24 4c-7.682 0-14.38 4.337-17.694 10.691Z" />
-                  <path fill="#4CAF50" d="M24 44c5.096 0 9.834-1.949 13.379-5.129l-6.173-5.223C29.169 35.091 26.715 36 24 36c-5.281 0-9.741-3.068-11.282-7.5l-6.497 5.003C9.505 39.556 16.227 44 24 44Z" />
-                  <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.02 12.02 0 0 1-4.097 5.648l.003-.002 6.173 5.223C36.941 39.18 44 34 44 24c0-1.341-.138-2.65-.389-3.917Z" />
-                </svg>
-                Continue with Google
-              </button>
-
+              {/* <div className="flex justify-center mb-6">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError("Google login failed.")}
+                  theme="filled_black"
+                  shape="pill"
+                />
+              </div> */}
+              <GoogleButton isSignup={false} />
 
             </>
           )}
