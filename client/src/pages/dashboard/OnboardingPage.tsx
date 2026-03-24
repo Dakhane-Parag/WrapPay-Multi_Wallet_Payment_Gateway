@@ -10,7 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { submitOnboarding, getToken } from "@/lib/api";
+import { submitOnboarding } from "@/lib/api";
 import type { OnboardingData } from "@/types";
 import Logo from "@/assets/wrap1.png";
 
@@ -64,11 +64,6 @@ const OnboardingPage = () => {
     }
   };
 
-  // Redirect if no token
-  if (!getToken()) {
-    navigate("/login");
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-[#060e0e] flex items-center justify-center px-4 py-12">

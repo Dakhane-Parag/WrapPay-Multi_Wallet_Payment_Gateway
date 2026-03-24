@@ -23,7 +23,13 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
 
   const stored = localStorage.getItem("wrappay_merchant");
-  const merchantEmail = stored ? JSON.parse(stored).email ?? "" : "";
+  const parsedMerchant = stored ? JSON.parse(stored) : null;
+  // Backend may return email as nested object { email, isVerified } or plain string
+  const rawEmail = parsedMerchant?.email;
+  const merchantEmail: string =
+    typeof rawEmail === "object" && rawEmail !== null
+      ? (rawEmail.email ?? "")
+      : (rawEmail ?? "");
 
   const handleLogout = () => {
     clearToken();
