@@ -63,7 +63,7 @@ export default function Signup() {
       <div className="flex items-center justify-center bg-black/90 px-6">
         <div className="w-full max-w-md text-white">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
+          <div onClick={() => navigate("/")} className="flex items-center gap-3 mb-8 hover:cursor-pointer">
             <img src={Logo} alt="WrapPayments" className="h-10 w-10 rounded-full" />
             <span className="text-2xl font-bold">WrapPayments</span>
           </div>
