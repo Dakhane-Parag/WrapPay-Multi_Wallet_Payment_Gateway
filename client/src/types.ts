@@ -25,6 +25,42 @@ export interface MerchantProfile {
   createdAt: string | null;
 }
 
+/* Shape returned by GET /admin/merchants */
+export interface AdminMerchantApiKey {
+  keyPreview: string;
+  revoked: boolean;
+  createdAt: string;
+}
+
+export interface AdminMerchantEmail {
+  email: string;
+  isVerified: boolean;
+}
+
+export type MerchantStatus = 'Pending' | 'Verified' | 'Rejected';
+
+export interface AdminMerchant {
+  _id: string;
+  MerchantID: string;
+  businessName: string;
+  businessUrl?: string;
+  phone?: string;
+  email: AdminMerchantEmail;
+  wallet?: MerchantWallet;
+  verification?: {
+    isVerified: boolean;
+    verifiedAt?: string;
+    rejectedAt?: string;
+    onChainRegistered?: boolean;
+    registrationTxHash?: string;
+    chain?: string;
+  };
+  apiKey?: AdminMerchantApiKey | null;
+  createdAt: string;
+  /** Derived client-side */
+  status?: MerchantStatus;
+}
+
 export interface AuthMerchant {
   id: string;
   MerchantID: string;
@@ -89,5 +125,50 @@ export interface OnboardingData {
   wallet: {
     address: string;
     chain: string;
+  };
+}
+
+/** Real on-chain confirmed transaction from GET /tx/merchant/:wallet */
+export interface TransactionRecord {
+  _id: string;
+  merchant: string;       // wallet address
+  customer?: string;      // wallet address
+  sessionId?: string;
+  transactionId?: string; // smart-contract level ID
+  txHash: string;         // blockchain tx hash
+  amountPaid: string;
+  platformFee: string;
+  merchantReceived: string;
+  currency: string;
+  chain: string;
+  status: "pending" | "confirmed" | "failed" | "refund";
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Payment session from GET /session/:id or POST /session/create/new */
+export interface PaymentSession {
+  sessionId: string;
+  merchantId: string;
+  businessName: string;
+  amount: string;
+  currency: string;
+  walletAddress: string;
+  status: "pending" | "confirmed" | "failed" | "expired";
+  expiresAt: string;
+}
+
+/** Response from POST /payments/verify */
+export interface VerifyPaymentResponse {
+  status: "confirmed" | "pending" | "failed" | "failure_recorded" | "error";
+  txHash?: string;
+  transactionId?: string;
+  message?: string;
+  payment?: {
+    customer: string;
+    merchant: string;
+    amountPaid: string;
+    platformFee: string;
+    merchantReceived: string;
   };
 }

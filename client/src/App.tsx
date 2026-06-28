@@ -10,6 +10,7 @@ import ApiKeysPage from './pages/dashboard/ApiKeysPage';
 import OnboardingPage from './pages/dashboard/OnboardingPage';
 import PendingVerificationPage from './pages/dashboard/PendingVerificationPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
 import { getToken, getProfile } from './lib/api';
 import type { MerchantProfile } from './types';
 
@@ -84,6 +85,7 @@ const App = () => {
         <Route path="/docs" element={<DocsPage />} />
 
         {/* Admin routes */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
 
         {/* Merchant-protected routes — enforces onboarding → pending → dashboard flow */}

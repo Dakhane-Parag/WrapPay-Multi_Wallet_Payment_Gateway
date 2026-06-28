@@ -13,7 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getMerchantPayments, getMerchantId } from "@/lib/api";
+import { getMerchantPayments, getProfile } from "@/lib/api";
 import type { PaymentIntent } from "@/types";
 
 /* ------------------------------------------------------------------ */
@@ -28,12 +28,12 @@ const dateLabels: Record<DateRange, string> = {
   all: "All time",
 };
 
-function filterByRange(payments: PaymentIntent[], range: DateRange) {
-  if (range === "all") return payments;
+function filterByRange(transactions: PaymentIntent[], range: DateRange) {
+  if (range === "all") return transactions;
   const days = range === "7d" ? 7 : range === "30d" ? 30 : 90;
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
-  return payments.filter((p) => new Date(p.createdAt) >= cutoff);
+  return transactions.filter((t) => new Date(t.createdAt) >= cutoff);
 }
 
 /* ------------------------------------------------------------------ */
@@ -42,14 +42,14 @@ function filterByRange(payments: PaymentIntent[], range: DateRange) {
 function StatusBadge({ status }: { status: PaymentIntent["status"] }) {
   const styles: Record<string, string> = {
     confirmed: "bg-[rgb(88,196,186)]/15 text-[rgb(88,196,186)] border-[rgb(88,196,186)]/20",
-    broadcasted: "bg-blue-500/15 text-blue-400 border-blue-500/20",
-    created: "bg-gray-500/15 text-gray-400 border-gray-500/20",
-    failed: "bg-red-500/15 text-red-400 border-red-500/20",
+    created:   "bg-blue-500/15 text-blue-400 border-blue-500/20",
+    broadcasted: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+    failed:    "bg-red-500/15 text-red-400 border-red-500/20",
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${styles[status] ?? styles.created}`}
+      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${styles[status] ?? styles.pending}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -70,54 +70,64 @@ function truncate(str: string, len = 8) {
 /*  COMPONENT                                                         */
 /* ------------------------------------------------------------------ */
 const DashboardPage = () => {
-  const [payments, setPayments] = useState<PaymentIntent[]>([]);
+  const [transactions, setTransactions] = useState<PaymentIntent[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<PaymentIntent | null>(null);
   const [copied, setCopied] = useState(false);
 
-  /* Fetch payments */
+  /* Fetch transactions — first get profile to get merchant ID */
   useEffect(() => {
-    const merchantId = getMerchantId();
-    if (!merchantId) {
-      setLoading(false);
-      return;
-    }
-
-    getMerchantPayments(merchantId)
-      .then((data) => setPayments(Array.isArray(data) ? data : []))
-      .catch(() => setPayments([]))
+    getProfile()
+      .then(({ merchant }) => {
+        const merchantId = merchant.MerchantID;
+        if (!merchantId) {
+          console.error("[Dashboard] No MerchantID on profile:", merchant);
+          setLoading(false);
+          return;
+        }
+        console.log("[Dashboard] Fetching payments for merchant:", merchantId);
+        return getMerchantPayments(merchantId);
+      })
+      .then((res) => {
+        if (res !== undefined) {
+          console.log("[Dashboard] Payments received:", res);
+          setTransactions(Array.isArray(res) ? res : []);
+        }
+      })
+      .catch((err) => {
+        console.error("[Dashboard] Failed to fetch payments:", err);
+        setTransactions([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   /* Filtered list */
-  const filtered = useMemo(() => filterByRange(payments, dateRange), [payments, dateRange]);
+  const filtered = useMemo(() => filterByRange(transactions, dateRange), [transactions, dateRange]);
 
-  /* Metrics computed from ALL payments */
+  /* Metrics computed from ALL transactions */
   const metrics = useMemo(() => {
-    const total = payments.length;
-    const confirmed = payments.filter((p) => p.status === "confirmed").length;
-    const failed = payments.filter((p) => p.status === "failed").length;
-    const pending = payments.filter(
-      (p) => p.status === "created" || p.status === "broadcasted"
-    ).length;
-    const totalVolume = payments
-      .filter((p) => p.status === "confirmed")
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+    const total = transactions.length;
+    const confirmed = transactions.filter((t) => t.status === "confirmed").length;
+    const failed = transactions.filter((t) => t.status === "failed").length;
+    const pending = transactions.filter((t) => t.status === "created" || t.status === "broadcasted").length;
+    const totalVolume = transactions
+      .filter((t) => t.status === "confirmed")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const now = new Date();
-    const thisMonthVolume = payments
+    const thisMonthVolume = transactions
       .filter(
-        (p) =>
-          p.status === "confirmed" &&
-          new Date(p.createdAt).getMonth() === now.getMonth() &&
-          new Date(p.createdAt).getFullYear() === now.getFullYear()
+        (t) =>
+          t.status === "confirmed" &&
+          new Date(t.createdAt).getMonth() === now.getMonth() &&
+          new Date(t.createdAt).getFullYear() === now.getFullYear()
       )
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const successRate = total > 0 ? ((confirmed / total) * 100).toFixed(1) : "0.0";
 
     return { totalVolume, thisMonthVolume, total, successRate, pending, failed };
-  }, [payments]);
+  }, [transactions]);
 
   /* Copy helper */
   const copyToClipboard = (text: string) => {
@@ -316,10 +326,10 @@ const DashboardPage = () => {
                       {truncate(tx._id, 6)}
                     </td>
                     <td className="px-6 py-4 text-white font-semibold">
-                      {Number(tx.amount).toLocaleString()}
+                      {Number(tx.amount || 0).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-white/60 uppercase text-xs">
-                      {tx.currency || "—"}
+                      {tx.currency || "ETH"}
                     </td>
                     <td className="px-6 py-4 font-mono text-white/40 text-xs hidden md:table-cell">
                       {truncate(tx.blockchainTxHash ?? "", 6)}
@@ -404,11 +414,11 @@ const DashboardPage = () => {
               {/* Details */}
               <div className="px-6 py-6 space-y-5">
                 <DetailRow label="Transaction ID" value={selectedTx._id} mono copyable onCopy={() => copyToClipboard(selectedTx._id)} />
-                <DetailRow label="Amount" value={`${Number(selectedTx.amount).toLocaleString()} ${selectedTx.currency || ""}`} />
-                <DetailRow label="Currency" value={selectedTx.currency || "—"} />
+                <DetailRow label="Amount" value={`${Number(selectedTx.amount || 0).toLocaleString()} ${selectedTx.currency || "ETH"}`} />
                 <DetailRow label="Status">
                   <StatusBadge status={selectedTx.status} />
                 </DetailRow>
+                <DetailRow label="Confirmations" value={selectedTx.confirmations?.toString() || "0"} />
                 <DetailRow
                   label="Blockchain Tx Hash"
                   value={selectedTx.blockchainTxHash || "Not available"}
@@ -418,10 +428,6 @@ const DashboardPage = () => {
                     selectedTx.blockchainTxHash &&
                     copyToClipboard(selectedTx.blockchainTxHash)
                   }
-                />
-                <DetailRow
-                  label="Confirmations"
-                  value={String(selectedTx.confirmations ?? 0)}
                 />
                 <DetailRow
                   label="Created"

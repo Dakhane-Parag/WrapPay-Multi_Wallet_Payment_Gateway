@@ -15,15 +15,15 @@ import GoogleButton from "@/lib/GoogleAuth";
 
 // import { GoogleLogin } from '@react-oauth/google';
 
-type LoginMode = "merchant" | "admin";
-
 export default function Login() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<LoginMode>("merchant");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // The secret email that triggers the Admin login flow
+  const ADMIN_EMAIL = "wrappayadmin@wrappay.com";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +36,8 @@ export default function Login() {
 
     setLoading(true);
     try {
-      if (mode === "admin") {
+      // Automatically use admin login flow if the email matches the admin email
+      if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
         const res = await adminLogin(email, password);
         setAdminToken(res.token);
         setAdminData(res.admin);
@@ -95,30 +96,6 @@ export default function Login() {
             Log in to continue managing your payments.
           </p>
 
-          {/* Mode toggle */}
-          <div className="flex mb-6 bg-white/5 rounded-xl p-1 border border-white/10">
-            <button
-              type="button"
-              onClick={() => { setMode("merchant"); setError(""); }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "merchant"
-                ? "bg-[rgb(88,196,186)] text-[#003f3f] shadow-md"
-                : "text-white/50 hover:text-white"
-                }`}
-            >
-              Merchant
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode("admin"); setError(""); }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "admin"
-                ? "bg-[rgb(88,196,186)] text-[#003f3f] shadow-md"
-                : "text-white/50 hover:text-white"
-                }`}
-            >
-              Admin
-            </button>
-          </div>
-
           {/* Error */}
           {error && (
             <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -165,19 +142,15 @@ export default function Login() {
               />
             </div>
 
-            {/* Forgot password (merchant only) */}
-            {mode === "merchant" && (
-              <div className="flex justify-end mb-4">
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-[rgb(88,196,186)] hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-            )}
-
-            {mode === "admin" && <div className="mb-4" />}
+            {/* Forgot password */}
+            <div className="flex justify-end mb-4">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-[rgb(88,196,186)] hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             {/* Login button */}
             <button
@@ -200,47 +173,26 @@ export default function Login() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               ) : (
-                `Log in as ${mode === "admin" ? "Admin" : "Merchant"}`
+                "Log in"
               )}
             </button>
           </form>
 
-          {/* Separator + OAuth (merchant only) */}
-          {mode === "merchant" && (
-            <>
-              <div className="flex items-center my-6">
-                <div className="flex-grow h-px bg-white/10" />
-                <span className="px-4 text-sm text-white/40">OR</span>
-                <div className="flex-grow h-px bg-white/10" />
-              </div>
+          {/* Separator + OAuth */}
+          <div className="flex items-center my-6">
+            <div className="flex-grow h-px bg-white/10" />
+            <span className="px-4 text-sm text-white/40">OR</span>
+            <div className="flex-grow h-px bg-white/10" />
+          </div>
 
-              {/* <div className="flex justify-center mb-6">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError("Google login failed.")}
-                  theme="filled_black"
-                  shape="pill"
-                />
-              </div> */}
-              <GoogleButton isSignup={false} />
-
-            </>
-          )}
+          <GoogleButton isSignup={false} />
 
           {/* Footer */}
           <p className="text-sm text-white/50 mt-6">
-            {mode === "merchant" ? (
-              <>
-                Don't have an account?{" "}
-                <Link to="/signup" className="text-[rgb(88,196,186)] hover:underline">
-                  Sign up
-                </Link>
-              </>
-            ) : (
-              <span className="text-white/40 text-xs">
-                Admin accounts are created by existing admins.
-              </span>
-            )}
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-[rgb(88,196,186)] hover:underline">
+              Sign up
+            </Link>
           </p>
         </div>
       </div>

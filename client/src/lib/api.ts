@@ -9,6 +9,9 @@ import type {
   ApiKeyStatus,
   ApiKeyCreateResponse,
   OnboardingData,
+  TransactionRecord,
+  PaymentSession,
+  VerifyPaymentResponse,
 } from "@/types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:4000";
@@ -197,4 +200,67 @@ export const adminRevokeKey = (merchantId: string) =>
   adminFetch<{ success: boolean }>("/developer/revokeKey", {
     method: "POST",
     body: JSON.stringify({ merchantId }),
+  });
+
+/* ================================================================== */
+/*  TRANSACTIONS  (real on-chain confirmed records from /tx)          */
+/* ================================================================== */
+
+/** GET /tx/merchant/:wallet — all transactions for a merchant wallet */
+export const getMerchantTransactions = (walletAddress: string) =>
+  authFetch<{ status: string; count: number; data: TransactionRecord[] }>(
+    `/tx/merchant/${walletAddress}`
+  );
+
+/** GET /tx/:transactionId — single transaction by contract-level ID */
+export const getTransactionById = (transactionId: string) =>
+  authFetch<{ status: string; data: TransactionRecord }>(
+    `/tx/${transactionId}`
+  );
+
+/** GET /tx/hash/:txHash — single transaction by blockchain hash */
+export const getTransactionByHash = (txHash: string) =>
+  authFetch<{ status: string; data: TransactionRecord }>(
+    `/tx/hash/${txHash}`
+  );
+
+/* ================================================================== */
+/*  SESSIONS                                                           */
+/* ================================================================== */
+
+/** POST /session/create/new — create a payment session + intent */
+export const createSession = (data: {
+  merchantId: string;
+  amount: string;
+  currency: string;
+}) =>
+  authFetch<PaymentSession>("/session/create/new", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+/** GET /session/:id — get a session by sessionId */
+export const getSession = (sessionId: string) =>
+  authFetch<PaymentSession>(`/session/${sessionId}`);
+
+/** POST /session/:id/expire — manually expire a session */
+export const expireSession = (sessionId: string) =>
+  authFetch<{ ok: boolean }>(`/session/${sessionId}/expire`, {
+    method: "POST",
+  });
+
+/* ================================================================== */
+/*  PAYMENT VERIFICATION                                               */
+/* ================================================================== */
+
+/** POST /payments/verify — verify a blockchain tx against a session */
+export const verifyPayment = (data: {
+  sessionId: string;
+  txHash: string;
+  walletAddress?: string;
+  status?: string;
+}) =>
+  authFetch<VerifyPaymentResponse>("/payments/verify", {
+    method: "POST",
+    body: JSON.stringify(data),
   });

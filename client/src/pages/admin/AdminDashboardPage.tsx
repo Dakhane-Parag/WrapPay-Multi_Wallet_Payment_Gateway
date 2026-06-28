@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Shield,
   CheckCircle2,
   KeyRound,
   UserPlus,
@@ -9,20 +8,23 @@ import {
   Loader2,
   AlertTriangle,
   X,
+  Users,
+  LayoutDashboard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  adminVerifyMerchant,
-  adminRevokeKey,
   adminSignup,
   clearAdminToken,
   clearAdminData,
   getAdminToken,
 } from "@/lib/api";
+import { adminVerifyMerchant, adminRevokeApiKey, adminGetMerchants } from "@/api/admin";
+import MerchantTable from "@/components/admin/MerchantTable";
+import type { AdminMerchant } from "@/types";
 import Logo from "@/assets/wrap1.png";
 
 /* ------------------------------------------------------------------ */
-/*  Reusable action card                                              */
+/*  Reusable action card (kept from existing dashboard)               */
 /* ------------------------------------------------------------------ */
 function ActionCard({
   icon: Icon,
@@ -124,26 +126,69 @@ function ActionCard({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Tab type                                                           */
+/* ------------------------------------------------------------------ */
+
+type Tab = "merchants" | "actions";
+
+/* ------------------------------------------------------------------ */
 /*  Admin Dashboard Page                                              */
 /* ------------------------------------------------------------------ */
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<Tab>("merchants");
 
   /* Registration form state */
   const [regForm, setRegForm] = useState({ name: "", email: "", password: "" });
   const [regLoading, setRegLoading] = useState(false);
   const [regResult, setRegResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
-  /* Redirect if no admin token */
-  if (!getAdminToken()) {
-    navigate("/login");
-    return null;
-  }
+  /* Merchants state */
+  const [merchants, setMerchants] = useState<AdminMerchant[]>([]);
+  const [merchantsLoading, setMerchantsLoading] = useState(false);
+  const [merchantsError, setMerchantsError] = useState<string | null>(null);
+
+  /* Auth guard — must run in effect, not at render time */
+  const [authed, setAuthed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!getAdminToken()) {
+      navigate("/admin/login", { replace: true });
+    } else {
+      setAuthed(true);
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
     clearAdminToken();
     clearAdminData();
-    navigate("/login");
+    navigate("/admin/login");
+  };
+
+  /* Fetch merchants */
+  const fetchMerchants = useCallback(async () => {
+    setMerchantsLoading(true);
+    setMerchantsError(null);
+    try {
+      const res = await adminGetMerchants();
+      setMerchants(res.merchants);
+    } catch (err) {
+      setMerchantsError(err instanceof Error ? err.message : "Failed to load merchants.");
+    } finally {
+      setMerchantsLoading(false);
+    }
+  }, []);
+
+  /* Load on mount and whenever merchants tab is activated (only when authed) */
+  useEffect(() => {
+    if (authed && activeTab === "merchants") {
+      fetchMerchants();
+    }
+  }, [authed, activeTab, fetchMerchants]);
+
+  /* Optimistic update for a single merchant row */
+  const handleMerchantUpdate = (updated: AdminMerchant) => {
+    setMerchants(prev => prev.map(m => m._id === updated._id ? updated : m));
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -165,9 +210,24 @@ const AdminDashboardPage = () => {
     }
   };
 
+  /* Summary stats */
+  const totalMerchants  = merchants.length;
+  const verifiedCount   = merchants.filter(m => m.verification?.isVerified).length;
+  const pendingCount    = merchants.filter(m => !m.verification?.isVerified && !m.verification?.rejectedAt).length;
+  const rejectedCount   = merchants.filter(m => m.verification?.rejectedAt).length;
+
+  /* Render nothing until auth resolves */
+  if (!authed) {
+    return (
+      <div className="min-h-screen bg-[#060e0e] flex items-center justify-center">
+        <div className="w-7 h-7 border-2 border-[rgb(88,196,186)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#060e0e]">
-      {/* Top bar */}
+      {/* ── Top bar ─────────────────────────────────────────── */}
       <header className="bg-[#0a1a1a] border-b border-white/5 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src={Logo} alt="WrapPay" className="h-9 w-9 rounded-full" />
@@ -191,9 +251,10 @@ const AdminDashboardPage = () => {
         </button>
       </header>
 
-      {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
-        {/* Heading */}
+      {/* ── Content ─────────────────────────────────────────── */}
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
+
+        {/* Page heading */}
         <div>
           <h1
             className="text-2xl md:text-3xl font-bold text-white"
@@ -206,130 +267,206 @@ const AdminDashboardPage = () => {
           </p>
         </div>
 
-        {/* Action cards grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Verify Merchant */}
-          <ActionCard
-            icon={CheckCircle2}
-            title="Verify Merchant"
-            description="Approve a merchant's KYC verification"
-            inputLabel="Merchant ID"
-            inputPlaceholder="Enter merchant ObjectId..."
-            buttonLabel="Verify Merchant"
-            buttonColor="bg-[rgb(88,196,186)] text-[#003f3f] hover:bg-[rgb(110,215,205)]"
-            onSubmit={async (merchantId) => {
-              const res = await adminVerifyMerchant(merchantId);
-              return res.message || "Merchant verified successfully!";
-            }}
-          />
-
-          {/* Revoke API Key */}
-          <ActionCard
-            icon={KeyRound}
-            title="Revoke API Key"
-            description="Revoke a merchant's active API key"
-            inputLabel="Merchant ID"
-            inputPlaceholder="Enter merchant ID..."
-            buttonLabel="Revoke Key"
-            buttonColor="bg-red-500 text-white hover:bg-red-600"
-            onSubmit={async (merchantId) => {
-              await adminRevokeKey(merchantId);
-              return "API key revoked successfully!";
-            }}
-          />
+        {/* ── Stat cards ─────────────────────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Total Merchants", value: totalMerchants, color: "text-white" },
+            { label: "Verified",        value: verifiedCount,   color: "text-emerald-400" },
+            { label: "Pending",         value: pendingCount,    color: "text-amber-400" },
+            { label: "Rejected",        value: rejectedCount,   color: "text-red-400" },
+          ].map(stat => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl bg-[#0d1717] border border-white/5 px-5 py-4"
+            >
+              <p className="text-white/40 text-xs mb-1">{stat.label}</p>
+              <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Register New Admin */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-2xl bg-[#0d1717] border border-white/5 p-6"
-        >
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-[rgb(88,196,186)]/10 flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-[rgb(88,196,186)]" />
-            </div>
-            <div>
-              <h3 className="text-white font-semibold text-sm">Register New Admin</h3>
-              <p className="text-white/40 text-xs">Create an account for a new platform admin</p>
-            </div>
-          </div>
+        {/* ── Tab bar ───────────────────────────────────────── */}
+        <div className="flex items-center gap-1 bg-[#0d1717] border border-white/5 rounded-2xl p-1 w-fit">
+          {([
+            { id: "merchants", label: "Merchants", icon: Users },
+            { id: "actions",   label: "Quick Actions", icon: LayoutDashboard },
+          ] as { id: Tab; label: string; icon: React.ElementType }[]).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                activeTab === tab.id
+                  ? "bg-[rgb(88,196,186)] text-[#003f3f]"
+                  : "text-white/50 hover:text-white"
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-          <AnimatePresence>
-            {regResult && (
+        {/* ── Tab content ───────────────────────────────────── */}
+        <AnimatePresence mode="wait">
+          {activeTab === "merchants" && (
+            <motion.div
+              key="merchants"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <MerchantTable
+                merchants={merchants}
+                loading={merchantsLoading}
+                error={merchantsError}
+                onRefresh={fetchMerchants}
+                onUpdate={handleMerchantUpdate}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === "actions" && (
+            <motion.div
+              key="actions"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-8"
+            >
+              {/* Quick action cards */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Verify Merchant */}
+                <ActionCard
+                  icon={CheckCircle2}
+                  title="Verify Merchant"
+                  description="Approve a merchant's KYC verification by ID"
+                  inputLabel="Merchant ObjectId"
+                  inputPlaceholder="Enter merchant ObjectId…"
+                  buttonLabel="Verify Merchant"
+                  buttonColor="bg-[rgb(88,196,186)] text-[#003f3f] hover:bg-[rgb(110,215,205)]"
+                  onSubmit={async (merchantId) => {
+                    const res = await adminVerifyMerchant(merchantId);
+                    // Also refresh the merchants list
+                    fetchMerchants();
+                    return res.message || "Merchant verified successfully!";
+                  }}
+                />
+
+                {/* Revoke API Key */}
+                <ActionCard
+                  icon={KeyRound}
+                  title="Revoke API Key"
+                  description="Revoke a merchant's active API key by ID"
+                  inputLabel="Merchant ObjectId"
+                  inputPlaceholder="Enter merchant ID…"
+                  buttonLabel="Revoke Key"
+                  buttonColor="bg-red-500 text-white hover:bg-red-600"
+                  onSubmit={async (merchantId) => {
+                    await adminRevokeApiKey(merchantId);
+                    fetchMerchants();
+                    return "API key revoked successfully!";
+                  }}
+                />
+              </div>
+
+              {/* Register New Admin */}
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className={`mb-4 px-4 py-2.5 rounded-xl text-sm flex items-center justify-between ${
-                  regResult.type === "success"
-                    ? "bg-green-500/10 border border-green-500/20 text-green-400"
-                    : "bg-red-500/10 border border-red-500/20 text-red-400"
-                }`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl bg-[#0d1717] border border-white/5 p-6"
               >
-                <span>{regResult.msg}</span>
-                <button onClick={() => setRegResult(null)} className="shrink-0 ml-2 hover:opacity-70">
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-[rgb(88,196,186)]/10 flex items-center justify-center">
+                    <UserPlus className="w-5 h-5 text-[rgb(88,196,186)]" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-sm">Register New Admin</h3>
+                    <p className="text-white/40 text-xs">Create an account for a new platform admin</p>
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {regResult && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className={`mb-4 px-4 py-2.5 rounded-xl text-sm flex items-center justify-between ${
+                        regResult.type === "success"
+                          ? "bg-green-500/10 border border-green-500/20 text-green-400"
+                          : "bg-red-500/10 border border-red-500/20 text-red-400"
+                      }`}
+                    >
+                      <span>{regResult.msg}</span>
+                      <button onClick={() => setRegResult(null)} className="shrink-0 ml-2 hover:opacity-70">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <form onSubmit={handleRegister} className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1.5">Name</label>
+                    <input
+                      type="text"
+                      value={regForm.name}
+                      onChange={(e) => setRegForm((p) => ({ ...p, name: e.target.value }))}
+                      placeholder="Admin Name"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(88,196,186)] transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1.5">Email</label>
+                    <input
+                      type="email"
+                      value={regForm.email}
+                      onChange={(e) => setRegForm((p) => ({ ...p, email: e.target.value }))}
+                      placeholder="admin@example.com"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(88,196,186)] transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1.5">Password</label>
+                    <input
+                      type="password"
+                      value={regForm.password}
+                      onChange={(e) => setRegForm((p) => ({ ...p, password: e.target.value }))}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(88,196,186)] transition"
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <button
+                      type="submit"
+                      disabled={regLoading}
+                      className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[rgb(88,196,186)] text-[#003f3f] font-semibold text-sm hover:bg-[rgb(110,215,205)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {regLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Register Admin"}
+                    </button>
+                  </div>
+                </form>
               </motion.div>
-            )}
-          </AnimatePresence>
 
-          <form onSubmit={handleRegister} className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs text-white/50 mb-1.5">Name</label>
-              <input
-                type="text"
-                value={regForm.name}
-                onChange={(e) => setRegForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="Admin Name"
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(88,196,186)] transition"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-white/50 mb-1.5">Email</label>
-              <input
-                type="email"
-                value={regForm.email}
-                onChange={(e) => setRegForm((p) => ({ ...p, email: e.target.value }))}
-                placeholder="admin@example.com"
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(88,196,186)] transition"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-white/50 mb-1.5">Password</label>
-              <input
-                type="password"
-                value={regForm.password}
-                onChange={(e) => setRegForm((p) => ({ ...p, password: e.target.value }))}
-                placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(88,196,186)] transition"
-              />
-            </div>
-            <div className="md:col-span-3">
-              <button
-                type="submit"
-                disabled={regLoading}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[rgb(88,196,186)] text-[#003f3f] font-semibold text-sm hover:bg-[rgb(110,215,205)] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {regLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Register Admin"}
-              </button>
-            </div>
-          </form>
-        </motion.div>
-
-        {/* Info block */}
-        <div className="flex gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-amber-300 text-sm font-medium">Admin actions are permanent</p>
-            <p className="text-amber-300/50 text-xs mt-1">
-              Verifying a merchant or revoking an API key cannot be undone from this panel.
-              Double-check the Merchant ID before performing any action.
-            </p>
-          </div>
-        </div>
+              {/* Info block */}
+              <div className="flex gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-300 text-sm font-medium">Admin actions are permanent</p>
+                  <p className="text-amber-300/50 text-xs mt-1">
+                    Verifying a merchant or revoking an API key cannot be undone from this panel.
+                    Double-check the Merchant ID before performing any action.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
